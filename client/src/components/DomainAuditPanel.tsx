@@ -152,19 +152,21 @@ function AuditStepSection({
         )}
 
         {checks.length > 0 ? (
-          <table className="data-table">
-            <tbody>
-              {checks.map((c) => (
-                <tr key={c.id} className="align-top hover:bg-base-border/30">
-                  <td className="w-24">
-                    <Badge tone={auditTone[c.status]}>{auditLabel[c.status]}</Badge>
-                  </td>
-                  <td className="w-56 text-ink">{c.title}</td>
-                  <td className="break-words font-mono text-xs text-ink-muted">{c.detail}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <tbody>
+                {checks.map((c) => (
+                  <tr key={c.id} className="align-top hover:bg-surface-border/30">
+                    <td className="w-24">
+                      <Badge tone={auditTone[c.status]}>{auditLabel[c.status]}</Badge>
+                    </td>
+                    <td className="w-56 text-ink">{c.title}</td>
+                    <td className="break-words font-mono text-xs text-ink-muted">{c.detail}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
           <p className="p-4 text-sm text-ink-muted">
             {step.status === 'done' ? 'No checks returned.' : 'Awaiting results...'}
@@ -172,7 +174,7 @@ function AuditStepSection({
         )}
 
         {jobs.length > 0 && (
-          <div className="flex flex-wrap gap-2 border-t border-base-border px-4 py-3">
+          <div className="flex flex-wrap gap-2 border-t border-surface-border px-4 py-3">
             {jobs.map((job) => (
               <button
                 key={job.id}

@@ -5,7 +5,7 @@ import { formatDuration } from '../lib/format'
 import type { ScanJob, StepStatus, Workflow, WorkflowStep } from '../lib/types'
 import { Badge } from './Badge'
 import { RawOutputViewer } from './RawOutputViewer'
-import { SectionHeader, StatusPill, CollapsiblePanel } from './ui'
+import { SectionHeader, StatusPill } from './ui'
 
 const sectionLabels: Record<string, string> = {
   enum: 'Enumeration',
@@ -41,9 +41,13 @@ const toolMeta: Record<string, ToolMeta> = {
 export function WorkflowPanel({
   scopeTargetId,
   authConfirmed,
+  activeStepKey,
+  showRun = true,
 }: {
   scopeTargetId: string
   authConfirmed: boolean
+  activeStepKey?: string
+  showRun?: boolean
 }) {
   const queryClient = useQueryClient()
 
@@ -89,23 +93,29 @@ export function WorkflowPanel({
   const endpointsList = endpoints.data?.items ?? []
   const steps = active?.steps ?? []
 
+  const visibleSteps = activeStepKey ? steps.filter((step) => step.step_key === activeStepKey) : steps
+  const showLiveServers = !activeStepKey || activeStepKey === 'consolidate_probe'
+  const showEndpoints = !activeStepKey || activeStepKey === 'urls'
+
   return (
-    <CollapsiblePanel
-      id="workflow"
-      title="Wildcard workflow"
-      description="Enumeration → parallel scraping → consolidate & live-probe → URL discovery."
-      status={active ? <StatusPill status={active.status} /> : undefined}
-      actions={
-        <button
-          className="btn btn-primary"
-          disabled={!authConfirmed || run.isPending || running}
-          title={!authConfirmed ? 'Confirm authorization before running a workflow' : undefined}
-          onClick={() => run.mutate()}
-        >
-          {run.isPending ? 'Starting...' : 'Run Wildcard Workflow'}
-        </button>
-      }
-    >
+    <section>
+      {showRun && (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            className="btn btn-primary"
+            disabled={!authConfirmed || run.isPending || running}
+            title={!authConfirmed ? 'Confirm authorization before running a workflow' : undefined}
+            onClick={() => run.mutate()}
+          >
+            {run.isPending ? 'Starting...' : 'Run Wildcard Workflow'}
+          </button>
+          {active && <StatusPill status={active.status} />}
+          <span className="hidden text-xs text-ink-muted lg:inline">
+            Enumeration &rarr; scraping &rarr; consolidate &amp; live-probe &rarr; URL discovery
+          </span>
+        </div>
+      )}
+
       {run.isError && (
         <p role="alert" className="mt-3 font-mono text-sm text-sev-critical">
           {run.error instanceof ApiError ? run.error.message : 'Failed to start workflow'}
@@ -114,7 +124,7 @@ export function WorkflowPanel({
 
       {active ? (
         <>
-          {steps.map((step) => {
+          {visibleSteps.map((step) => {
             const duration = step.finished_at
               ? formatDuration(step.started_at, step.finished_at)
               : undefined
@@ -131,131 +141,175 @@ export function WorkflowPanel({
             }
             return <ToolSection key={step.id} step={step} duration={duration} />
           })}
-          <DecisionPoint
-            status={active.status}
-            totalSubdomains={subs.length}
-            liveServers={servers.length}
-            urls={endpointsList.length}
-            interesting={endpointsList.filter((ep) => ep.interesting).length}
-          />
+
+          {showLiveServers && <LiveServersTable servers={servers} />}
+
+          {showEndpoints && (
+            <>
+              <EndpointsTable endpoints={endpointsList} />
+              <DecisionPoint
+                status={active.status}
+                totalSubdomains={subs.length}
+                liveServers={servers.length}
+                urls={endpointsList.length}
+                interesting={endpointsList.filter((ep) => ep.interesting).length}
+              />
+            </>
+          )}
         </>
       ) : (
-        <p className="card mt-4 p-5 text-sm text-ink-muted">
-          No workflow run yet. Run the wildcard workflow to enumerate subdomains and find live
-          servers.
+        <>
+          <p className="card mt-4 p-5 text-sm text-ink-muted">
+            No workflow run yet. Run the wildcard workflow to enumerate subdomains and find live
+            servers.
+          </p>
+          {activeStepKey && plannedTools[activeStepKey] && (
+            <DraftToolGrid stepKey={activeStepKey} />
+          )}
+        </>
+      )}
+
+      {active?.error && <p className="mt-3 font-mono text-xs text-sev-critical">{active.error}</p>}
+    </section>
+  )
+}
+
+function LiveServersTable({ servers }: { servers: { id: string; url: string; screenshot_path: string | null; status_code: number | null; title: string | null; tech_stack: string[]; ip: string | null }[] }) {
+  return (
+    <div id="live-servers" className="card mt-8 overflow-hidden scroll-mt-40">
+      <div className="flex items-center justify-between border-b border-accent/25 px-4 py-2.5">
+        <span className="section-label font-display font-medium text-ink">Live web servers</span>
+        <span className="font-mono text-xs text-ink-muted">{servers.length}</span>
+      </div>
+      {servers.length === 0 ? (
+        <p className="p-4 text-sm text-ink-muted">
+          No live servers yet. They appear here after consolidation finishes.
         </p>
-      )}
-
-      {active?.error && (
-        <p className="mt-3 font-mono text-xs text-sev-critical">{active.error}</p>
-      )}
-
-      <div id="live-servers" className="card mt-10 overflow-hidden scroll-mt-40">
-        <div className="flex items-center justify-between border-b border-accent/25 px-4 py-2.5">
-          <span className="section-label font-display font-medium text-ink">Live web servers</span>
-          <span className="font-mono text-xs text-ink-muted">{servers.length}</span>
-        </div>
-        {servers.length === 0 ? (
-          <p className="p-4 text-sm text-ink-muted">
-            No live servers yet. They appear here after consolidation finishes.
-          </p>
-        ) : (
-          <div className="max-h-96 overflow-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>URL</th>
-                  <th>Screenshot</th>
-                  <th>Status</th>
-                  <th>Title</th>
-                  <th>Tech</th>
-                  <th>IP</th>
+      ) : (
+        <div className="max-h-96 overflow-auto">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>URL</th>
+                <th>Screenshot</th>
+                <th>Status</th>
+                <th>Title</th>
+                <th>Tech</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {servers.map((srv) => (
+                <tr key={srv.id} className="hover:bg-surface-border/30">
+                  <td className="font-mono">{srv.url}</td>
+                  <td>
+                    {srv.screenshot_path ? (
+                      <a href={liveServerScreenshotUrl(srv.id)} target="_blank" rel="noreferrer">
+                        <img
+                          src={liveServerScreenshotUrl(srv.id)}
+                          alt={srv.url}
+                          loading="lazy"
+                          className="h-12 w-20 rounded border border-surface-border object-cover transition-opacity hover:opacity-80"
+                        />
+                      </a>
+                    ) : (
+                      <span className="text-ink-muted">-</span>
+                    )}
+                  </td>
+                  <td>
+                    {srv.status_code != null && (
+                      <Badge tone={srv.status_code < 400 ? 'accent' : 'medium'}>
+                        {srv.status_code}
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="max-w-xs truncate text-ink-muted">{srv.title || '-'}</td>
+                  <td className="text-ink-muted">
+                    {Array.isArray(srv.tech_stack) && srv.tech_stack.length > 0
+                      ? srv.tech_stack.join(', ')
+                      : '-'}
+                  </td>
+                  <td className="font-mono text-ink-muted">{srv.ip || '-'}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {servers.map((srv) => (
-                  <tr key={srv.id} className="hover:bg-base-border/30">
-                    <td className="font-mono">{srv.url}</td>
-                    <td>
-                      {srv.screenshot_path ? (
-                        <a
-                          href={liveServerScreenshotUrl(srv.id)}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <img
-                            src={liveServerScreenshotUrl(srv.id)}
-                            alt={srv.url}
-                            loading="lazy"
-                            className="h-12 w-20 rounded border border-base-border object-cover transition-opacity hover:opacity-80"
-                          />
-                        </a>
-                      ) : (
-                        <span className="text-ink-muted">-</span>
-                      )}
-                    </td>
-                    <td>
-                      {srv.status_code != null && (
-                        <Badge tone={srv.status_code < 400 ? 'accent' : 'medium'}>
-                          {srv.status_code}
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="max-w-xs truncate text-ink-muted">{srv.title || '-'}</td>
-                    <td className="text-ink-muted">
-                      {Array.isArray(srv.tech_stack) && srv.tech_stack.length > 0
-                        ? srv.tech_stack.join(', ')
-                        : '-'}
-                    </td>
-                    <td className="font-mono text-ink-muted">{srv.ip || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      <div id="endpoints" className="card mt-6 overflow-hidden scroll-mt-40">
-        <div className="flex items-center justify-between border-b border-accent/25 px-4 py-2.5">
-          <span className="section-label font-display font-medium text-ink">
-            Discovered URLs / endpoints
-          </span>
-          <span className="font-mono text-xs text-ink-muted">
-            {endpointsList.length} total &middot;{' '}
-            {endpointsList.filter((e) => e.interesting).length} interesting
-          </span>
+              ))}
+            </tbody>
+          </table>
         </div>
-        {endpointsList.length === 0 ? (
-          <p className="p-4 text-sm text-ink-muted">
-            No URLs yet. They appear here after URL discovery completes.
-          </p>
-        ) : (
-          <div className="max-h-96 overflow-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>URL</th>
-                  <th>Source</th>
-                  <th>Flags</th>
-                </tr>
-              </thead>
-              <tbody>
-                {endpointsList.map((ep) => (
-                  <tr key={ep.id} className="hover:bg-base-border/30">
-                    <td className="max-w-xl truncate font-mono" title={ep.url ?? ep.path}>
-                      {ep.url ?? ep.path}
-                    </td>
-                    <td className="text-ink-muted">{ep.source_tool || '-'}</td>
-                    <td>{ep.interesting && <Badge tone="medium">interesting</Badge>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      )}
+    </div>
+  )
+}
+
+function EndpointsTable({ endpoints }: { endpoints: { id: string; url: string | null; path: string; source_tool: string | null; interesting: boolean }[] }) {
+  return (
+    <div id="endpoints" className="card mt-8 overflow-hidden scroll-mt-40">
+      <div className="flex items-center justify-between border-b border-accent/25 px-4 py-2.5">
+        <span className="section-label font-display font-medium text-ink">
+          Discovered URLs / endpoints
+        </span>
+        <span className="font-mono text-xs text-ink-muted">
+          {endpoints.length} total &middot;{' '}
+          {endpoints.filter((e) => e.interesting).length} interesting
+        </span>
       </div>
-    </CollapsiblePanel>
+      {endpoints.length === 0 ? (
+        <p className="p-4 text-sm text-ink-muted">
+          No URLs yet. They appear here after URL discovery completes.
+        </p>
+      ) : (
+        <div className="max-h-96 overflow-auto">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>URL</th>
+                <th>Source</th>
+                <th>Flags</th>
+              </tr>
+            </thead>
+            <tbody>
+              {endpoints.map((ep) => (
+                <tr key={ep.id} className="hover:bg-surface-border/30">
+                  <td className="max-w-xl truncate font-mono" title={ep.url ?? ep.path}>
+                    {ep.url ?? ep.path}
+                  </td>
+                  <td className="text-ink-muted">{ep.source_tool || '-'}</td>
+                  <td>{ep.interesting && <Badge tone="medium">interesting</Badge>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DraftToolGrid({ stepKey }: { stepKey: string }) {
+  const tools = plannedTools[stepKey] ?? []
+  if (tools.length === 0) return null
+  return (
+    <section className="mt-8">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="font-display text-base font-medium text-ink-muted">
+          {sectionLabels[stepKey] ?? stepKey}
+        </span>
+        <span className="rounded-full border border-surface-border px-2.5 py-0.5 text-[11px] text-ink-muted">
+          Not started
+        </span>
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {tools.map((tool) => (
+          <ToolCard
+            key={tool}
+            tool={tool}
+            job={undefined}
+            count={undefined}
+            openJobId={null}
+            onToggleResults={() => {}}
+          />
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -267,7 +321,7 @@ function ToolSection({ step, duration }: { step: WorkflowStep; duration?: string
   const summaryLine = summarize(step.summary)
 
   return (
-    <section className="mt-10">
+    <section className="mt-8">
       <SectionHeader
         label={sectionLabels[step.step_key] ?? step.title}
         status={step.status}
@@ -307,7 +361,7 @@ function ConsolidateMilestone({
   liveServers: number
 }) {
   return (
-    <section className="mt-10">
+    <section className="mt-8">
       <SectionHeader
         label={sectionLabels[step.step_key] ?? step.title}
         status={step.status}
@@ -317,7 +371,9 @@ function ConsolidateMilestone({
 
       <div className="card mt-4 p-6 text-center md:p-8">
         <h3 className="section-title">Consolidate Subdomains &amp; Discover Live Web Servers</h3>
-        <p className="mx-auto mt-2 max-w-2xl text-sm text-ink-muted">{firstSentence(step.description)}</p>
+        <p className="mx-auto mt-2 max-w-2xl text-sm text-ink-muted">
+          {firstSentence(step.description)}
+        </p>
 
         <div className="mt-6 flex flex-col items-center justify-center gap-8 sm:flex-row sm:gap-16">
           <div>
@@ -360,7 +416,7 @@ function DecisionPoint({
   interesting: number
 }) {
   return (
-    <section className="mt-10">
+    <section className="mt-8">
       <SectionHeader
         label="Decision Point"
         status={status}
@@ -462,7 +518,7 @@ function ToolCard({
       </div>
 
       {help && meta.desc && (
-        <p className="mt-3 w-full rounded border border-base-border bg-base-panel p-2 text-[11px] leading-relaxed text-ink-muted">
+        <p className="mt-3 w-full rounded border border-surface-border bg-surface-panel p-2 text-[11px] leading-relaxed text-ink-muted">
           {meta.desc}
         </p>
       )}

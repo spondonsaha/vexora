@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import type { StepStatus } from '../lib/types'
 import { StatusDot, type Tone } from './StatusDot'
+import { QuestionIcon } from './workspace/icons'
 
 export const statusTone: Record<StepStatus, Tone> = {
   queued: 'info',
@@ -64,7 +65,7 @@ export function CollapsiblePanel({
   const [open, setOpen] = useState(defaultOpen)
   return (
     <section id={id} className="mt-8 scroll-mt-28">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-base-border bg-base-raised px-4 py-3 transition-colors hover:border-accent/40">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-surface-border bg-surface-raised px-4 py-3 transition-colors hover:border-accent/40">
         <button
           type="button"
           className="flex items-center gap-2 text-accent"
@@ -105,18 +106,20 @@ export function SectionHeader({
         <span className="font-display text-base font-medium text-ink-muted">{label}</span>
         <StatusPill status={status} />
         {duration && <span className="font-mono text-xs text-ink-muted">{duration}</span>}
+        {description && (
+          <button
+            type="button"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-surface-border px-2.5 py-1 text-[11px] text-ink-muted transition-colors hover:border-accent/40 hover:text-accent"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+          >
+            <QuestionIcon className="h-3.5 w-3.5" />
+            Help Me Learn
+          </button>
+        )}
       </div>
-      <button
-        type="button"
-        className="helpbar mt-2"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-      >
-        <span>Help Me Learn!</span>
-        <Chevron open={open} />
-      </button>
       {open && description && (
-        <p className="mt-2 rounded-lg border border-base-border bg-base-panel p-4 text-sm leading-relaxed text-ink-muted">
+        <p className="mt-2 rounded-lg border border-surface-border bg-surface-panel p-4 text-sm leading-relaxed text-ink-muted">
           {description}
         </p>
       )}

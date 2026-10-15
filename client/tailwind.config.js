@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: {
+        surface: {
           DEFAULT: 'rgb(var(--base) / <alpha-value>)',
           raised: 'rgb(var(--base-raised) / <alpha-value>)',
           panel: 'rgb(var(--base-panel) / <alpha-value>)',

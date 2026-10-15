@@ -181,7 +181,7 @@ export function ScanPanel({
               </thead>
               <tbody>
                 {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-base-border/30">
+                  <tr key={job.id} className="hover:bg-surface-border/30">
                     <td>{job.tool}</td>
                     <td>
                       <span className="inline-flex items-center gap-2">
@@ -232,7 +232,7 @@ export function ScanPanel({
               </thead>
               <tbody>
                 {subs.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-base-border/30">
+                  <tr key={sub.id} className="hover:bg-surface-border/30">
                     <td>{sub.subdomain}</td>
                     <td>
                       <Badge tone="muted">{sub.source_tool}</Badge>

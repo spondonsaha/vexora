@@ -27,7 +27,7 @@ export function RawOutputViewer({ jobId }: { jobId: string }) {
           ))}
         </div>
       </div>
-      <pre className="max-h-80 overflow-auto bg-base p-4 font-mono text-xs leading-relaxed text-ink">
+      <pre className="max-h-80 overflow-auto bg-surface p-4 font-mono text-xs leading-relaxed text-ink">
         {output.isLoading
           ? 'loading...'
           : output.isError

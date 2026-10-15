@@ -19,6 +19,10 @@
   <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
 </p>
 
+<p align="center">
+  <img src="assets/vexora-overview.png" alt="Vexora UI overview" width="880" />
+</p>
+
 ---
 
 ## Table of contents

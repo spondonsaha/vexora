@@ -158,7 +158,7 @@ export function TakeoverPanel({
               </thead>
               <tbody>
                 {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-base-border/30">
+                  <tr key={job.id} className="hover:bg-surface-border/30">
                     <td>
                       <span className="inline-flex items-center gap-2">
                         <StatusDot
@@ -226,7 +226,7 @@ export function TakeoverPanel({
                 {subs.map((sub) => {
                   const status = sub.takeover_status
                   return (
-                    <tr key={sub.id} className="align-top hover:bg-base-border/30">
+                    <tr key={sub.id} className="align-top hover:bg-surface-border/30">
                       <td className="font-mono">{sub.subdomain}</td>
                       <td className="break-all font-mono text-xs text-ink-muted">
                         {sub.cname ||

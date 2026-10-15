@@ -169,7 +169,7 @@ export function NucleiPanel({
                       ? String((job.options as { category?: unknown }).category ?? '-')
                       : '-'
                   return (
-                    <tr key={job.id} className="hover:bg-base-border/30">
+                    <tr key={job.id} className="hover:bg-surface-border/30">
                       <td>
                         <span className="inline-flex items-center gap-2">
                           <StatusDot
@@ -238,7 +238,7 @@ export function NucleiPanel({
               <tbody>
                 {rows.map((finding) => (
                   <Fragment key={finding.id}>
-                    <tr className="align-top hover:bg-base-border/30">
+                    <tr className="align-top hover:bg-surface-border/30">
                       <td>
                         <Badge tone={severityTone[finding.severity]}>{finding.severity}</Badge>
                       </td>
@@ -270,7 +270,7 @@ export function NucleiPanel({
                       </td>
                     </tr>
                     {expanded === finding.id && (
-                      <tr className="bg-base-border/20">
+                      <tr className="bg-surface-border/20">
                         <td colSpan={6} className="space-y-2 px-4 py-3">
                           {finding.description && (
                             <p className="text-sm text-ink-muted">{finding.description}</p>
@@ -301,7 +301,7 @@ export function NucleiPanel({
                             </p>
                           )}
                           {finding.curl_command && (
-                            <pre className="overflow-x-auto rounded border border-base-border bg-base-panel-alt p-2 font-mono text-xs text-ink-muted">
+                            <pre className="overflow-x-auto rounded border border-surface-border bg-surface-panel p-2 font-mono text-xs text-ink-muted">
                               {finding.curl_command}
                             </pre>
                           )}

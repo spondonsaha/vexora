@@ -8,7 +8,7 @@ const toneClass: Record<Tone | 'muted', string> = {
   medium: 'border-sev-medium/50 bg-sev-medium/10 text-sev-medium',
   low: 'border-sev-low/50 bg-sev-low/10 text-sev-low',
   info: 'border-sev-info/40 bg-sev-info/10 text-ink-muted',
-  muted: 'border-base-border bg-base-border/40 text-ink-muted',
+  muted: 'border-surface-border bg-surface-border/40 text-ink-muted',
 }
 
 export function Badge({ tone = 'info', children }: { tone?: Tone | 'muted'; children: ReactNode }) {

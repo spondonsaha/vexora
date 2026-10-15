@@ -164,7 +164,7 @@ export function NetworkPanel({
                       ? String((job.options as { profile?: unknown }).profile ?? '-')
                       : '-'
                   return (
-                    <tr key={job.id} className="hover:bg-base-border/30">
+                    <tr key={job.id} className="hover:bg-surface-border/30">
                       <td>
                         <span className="inline-flex items-center gap-2">
                           <StatusDot
@@ -228,7 +228,7 @@ export function NetworkPanel({
               </thead>
               <tbody>
                 {resolved.map((sub) => (
-                  <tr key={sub.id} className="align-top hover:bg-base-border/30">
+                  <tr key={sub.id} className="align-top hover:bg-surface-border/30">
                     <td className="font-mono text-xs text-ink">{sub.subdomain}</td>
                     <td className="font-mono text-xs text-ink-muted">
                       {sub.a_records.map((ip) => (
@@ -276,7 +276,7 @@ export function NetworkPanel({
               </thead>
               <tbody>
                 {rows.map((svc) => (
-                  <tr key={svc.id} className="align-top hover:bg-base-border/30">
+                  <tr key={svc.id} className="align-top hover:bg-surface-border/30">
                     <td className="font-mono text-xs text-ink">{svc.ip}</td>
                     <td className="font-mono text-xs text-ink-muted">
                       {svc.port}/{svc.protocol}

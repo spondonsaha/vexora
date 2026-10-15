@@ -5,7 +5,7 @@ export function OnboardingPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-10">
       <div className="mb-6">
         <h1 className="page-title">Welcome</h1>
         <p className="mt-1 max-w-2xl text-sm text-ink-muted">
@@ -31,7 +31,7 @@ export function OnboardingPage() {
             <div className="mt-4 space-y-3">
               <input
                 type="file"
-                className="input font-mono text-xs file:mr-3 file:rounded file:border-0 file:bg-base-border file:px-2 file:py-1 file:text-ink-muted"
+                className="input font-mono text-xs file:mr-3 file:rounded file:border-0 file:bg-surface-border file:px-2 file:py-1 file:text-ink-muted"
                 disabled
                 aria-disabled="true"
               />
@@ -61,7 +61,7 @@ export function OnboardingPage() {
         ))}
       </div>
 
-      <div className="mt-8 flex flex-col items-center gap-4 border-t border-base-border/60 pt-6 sm:flex-row sm:justify-between">
+      <div className="mt-8 flex flex-col items-center gap-4 border-t border-surface-border/60 pt-6 sm:flex-row sm:justify-between">
         <div className="flex items-center gap-3">
           <img src="/vexora-logo.png" alt="Vexora" className="h-10 w-10 rounded" />
           <div>

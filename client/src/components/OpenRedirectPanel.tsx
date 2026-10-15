@@ -199,7 +199,7 @@ export function OpenRedirectPanel({
                       ? (job.options as Record<string, unknown>)
                       : {}
                   return (
-                    <tr key={job.id} className="hover:bg-base-border/30">
+                    <tr key={job.id} className="hover:bg-surface-border/30">
                       <td>
                         <span className="inline-flex items-center gap-2">
                           <StatusDot
@@ -266,7 +266,7 @@ export function OpenRedirectPanel({
               <tbody>
                 {rows.map((finding) => (
                   <Fragment key={finding.id}>
-                    <tr className="align-top hover:bg-base-border/30">
+                    <tr className="align-top hover:bg-surface-border/30">
                       <td>
                         <Badge tone={typeTone(finding.finding_type)}>
                           {typeLabel(finding.finding_type)}
@@ -291,12 +291,12 @@ export function OpenRedirectPanel({
                       </td>
                     </tr>
                     {expanded === finding.id && (
-                      <tr className="bg-base-border/20">
+                      <tr className="bg-surface-border/20">
                         <td colSpan={6} className="space-y-2 px-4 py-3">
                           {finding.payload && (
                             <div>
                               <span className="label">Payload</span>
-                              <pre className="overflow-x-auto rounded border border-base-border bg-base-panel-alt p-2 font-mono text-xs text-ink">
+                              <pre className="overflow-x-auto rounded border border-surface-border bg-surface-panel p-2 font-mono text-xs text-ink">
                                 {finding.payload}
                               </pre>
                             </div>
@@ -304,7 +304,7 @@ export function OpenRedirectPanel({
                           {finding.evidence && (
                             <div>
                               <span className="label">Evidence</span>
-                              <pre className="overflow-x-auto rounded border border-base-border bg-base-panel-alt p-2 font-mono text-xs text-ink-muted">
+                              <pre className="overflow-x-auto rounded border border-surface-border bg-surface-panel p-2 font-mono text-xs text-ink-muted">
                                 {finding.evidence}
                               </pre>
                             </div>

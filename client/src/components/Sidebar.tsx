@@ -22,11 +22,11 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
         />
       )}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-base-border bg-base-raised transition-transform md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 w-60 border-r border-surface-border bg-surface-raised transition-transform md:static md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-14 items-center gap-2 border-b border-base-border px-4">
+        <div className="flex h-14 items-center gap-2 border-b border-surface-border px-4">
           <img
             src="/vexora-logo.png"
             alt="Vexora"
@@ -46,7 +46,7 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
                 `rounded px-3 py-2 text-sm transition-colors ${
                   isActive
                     ? 'bg-accent/15 text-accent'
-                    : 'text-ink-muted hover:bg-base-border/60 hover:text-ink'
+                    : 'text-ink-muted hover:bg-surface-border/60 hover:text-ink'
                 }`
               }
             >
@@ -59,7 +59,7 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
             Authorized testing only. Every target requires an explicit authorization
             acknowledgment before scanning.
           </p>
-          <div className="border-t border-base-border/60 pt-3">
+          <div className="border-t border-surface-border/60 pt-3">
             <p className="font-display text-xs font-semibold text-ink">Vexora</p>
             <p>
               Built by{' '}

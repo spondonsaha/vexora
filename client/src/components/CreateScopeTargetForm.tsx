@@ -113,7 +113,7 @@ export function CreateScopeTargetForm({ onCreated }: CreateScopeTargetFormProps)
         </div>
       </div>
 
-      <label className="mt-4 flex items-start gap-3 rounded border border-base-border bg-base p-3 text-sm">
+      <label className="mt-4 flex items-start gap-3 rounded border border-surface-border bg-surface p-3 text-sm">
         <input
           type="checkbox"
           className="mt-0.5 h-4 w-4 accent-accent"

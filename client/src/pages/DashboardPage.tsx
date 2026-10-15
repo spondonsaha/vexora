@@ -21,7 +21,7 @@ export function DashboardPage() {
   )
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
       <h1 className="page-title">Attack surface</h1>
       <p className="mt-1 text-sm text-ink-muted">
         Unified view of your scope. Domains, subdomains, live servers, endpoints, and findings
@@ -44,7 +44,7 @@ export function DashboardPage() {
                 <span className="w-24 text-sm text-ink-muted">
                   {scopeTargetTypeLabels[type]}
                 </span>
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-base-border">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-border">
                   <div
                     className="h-full bg-accent/70"
                     style={{
@@ -68,14 +68,14 @@ export function DashboardPage() {
             The highest-ROI live servers land here once scoring is enabled. This is where you
             decide what to test manually first &mdash; highest score, then forget the rest.
           </p>
-          <div className="mt-4 flex h-24 items-center justify-center rounded border border-dashed border-base-border text-xs text-ink-muted">
+          <div className="mt-4 flex h-24 items-center justify-center rounded border border-dashed border-surface-border text-xs text-ink-muted">
             No scored targets yet
           </div>
         </section>
       </div>
 
       <section className="card mt-6 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-base-border p-4">
+        <div className="flex items-center justify-between border-b border-surface-border p-4">
           <h2 className="section-title">Scope targets</h2>
           <Link to="/targets" className="text-sm text-accent hover:underline">
             Manage
@@ -90,32 +90,41 @@ export function DashboardPage() {
             .
           </p>
         ) : (
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Value</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {targets.map((target) => (
-                <tr key={target.id} className="hover:bg-base-border/30">
-                  <td>
-                    <Badge tone="muted">{scopeTargetTypeLabels[target.type]}</Badge>
-                  </td>
-                  <td>
-                    <Link to={`/targets/${target.id}`} className="hover:text-accent hover:underline">
-                      {target.value}
-                    </Link>
-                  </td>
-                  <td>
-                    {target.active ? <Badge tone="accent">Active</Badge> : <Badge tone="muted">Inactive</Badge>}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Value</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {targets.map((target) => (
+                  <tr key={target.id} className="hover:bg-surface-border/30">
+                    <td>
+                      <Badge tone="muted">{scopeTargetTypeLabels[target.type]}</Badge>
+                    </td>
+                    <td>
+                      <Link
+                        to={`/targets/${target.id}`}
+                        className="hover:text-accent hover:underline"
+                      >
+                        {target.value}
+                      </Link>
+                    </td>
+                    <td>
+                      {target.active ? (
+                        <Badge tone="accent">Active</Badge>
+                      ) : (
+                        <Badge tone="muted">Inactive</Badge>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>

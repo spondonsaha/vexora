@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { ThemeToggle } from '../theme/ThemeToggle'
 import { StatusDot, type Tone } from './StatusDot'
+import { CloseIcon, MenuIcon } from './workspace/icons'
 
 const navItems = [
   { to: '/onboarding', label: 'Welcome' },
@@ -59,6 +61,7 @@ function Icon({ name }: { name: 'help' | 'profile' | 'settings' }) {
 export function TopBar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const health = useQuery({
     queryKey: ['health'],
@@ -89,7 +92,7 @@ export function TopBar() {
     : items.find((target) => target.active)
 
   return (
-    <header className="sticky top-0 z-30 border-b border-base-border bg-base/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-surface-border bg-surface/95 backdrop-blur">
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
         <div className="flex h-16 items-center gap-4">
           <Link to="/onboarding" className="flex shrink-0 items-center gap-2.5">
@@ -133,22 +136,35 @@ export function TopBar() {
             </select>
             <div className="ml-1 flex items-center gap-1">
               <ThemeToggle />
-              <Link to="/onboarding" className="icon-btn" aria-label="Help" title="Help">
-                <Icon name="help" />
-              </Link>
-              <button type="button" className="icon-btn" aria-label="Profile" title="Profile">
-                <Icon name="profile" />
-              </button>
-              <button type="button" className="icon-btn" aria-label="Settings" title="Settings">
-                <Icon name="settings" />
+              <div className="hidden items-center gap-1 md:flex">
+                <Link to="/onboarding" className="icon-btn" aria-label="Help" title="Help">
+                  <Icon name="help" />
+                </Link>
+                <button type="button" className="icon-btn" aria-label="Profile" title="Profile">
+                  <Icon name="profile" />
+                </button>
+                <button type="button" className="icon-btn" aria-label="Settings" title="Settings">
+                  <Icon name="settings" />
+                </button>
+              </div>
+              <button
+                type="button"
+                className="icon-btn md:hidden"
+                aria-label="Toggle menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((value) => !value)}
+              >
+                {menuOpen ? <CloseIcon className="h-4 w-4" /> : <MenuIcon className="h-4 w-4" />}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 border-t border-base-border/60 py-2.5">
-          <span className="section-label shrink-0 font-display font-medium">Active Scope Target</span>
-          <span className="target-bar">
+        <div className="flex items-center gap-3 border-t border-surface-border/60 py-2.5">
+          <span className="section-label hidden shrink-0 font-display font-medium sm:inline">
+            Active Scope Target
+          </span>
+          <span className="target-bar min-w-0">
             <span className="truncate">{activeTarget?.value ?? 'None selected'}</span>
           </span>
           <div className="ml-auto flex shrink-0 items-center gap-2 text-xs text-ink-muted">
@@ -156,6 +172,32 @@ export function TopBar() {
             <span className="font-mono">api {healthLabel}</span>
           </div>
         </div>
+
+        {menuOpen && (
+          <nav className="border-t border-surface-border/60 py-2 md:hidden">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={() => setMenuOpen(false)}
+                className={({ isActive }) =>
+                  `block rounded-lg px-3 py-2 text-sm transition-colors ${
+                    isActive ? 'bg-accent/10 text-accent' : 'text-ink-muted hover:text-ink'
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            <Link
+              to="/onboarding"
+              onClick={() => setMenuOpen(false)}
+              className="btn btn-primary mt-2 w-full"
+            >
+              Add Scope Target
+            </Link>
+          </nav>
+        )}
       </div>
     </header>
   )

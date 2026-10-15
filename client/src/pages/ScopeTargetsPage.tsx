@@ -42,7 +42,7 @@ export function ScopeTargetsPage() {
   const targets = query.data?.items ?? []
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 md:py-10">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="page-title">Scope targets</h1>
         <div className="ml-auto flex items-center gap-2">
@@ -105,7 +105,7 @@ export function ScopeTargetsPage() {
               </thead>
               <tbody>
                 {targets.map((target) => (
-                  <tr key={target.id} className="hover:bg-base-border/30">
+                  <tr key={target.id} className="hover:bg-surface-border/30">
                     <td>
                       <Badge tone="muted">{scopeTargetTypeLabels[target.type]}</Badge>
                     </td>
@@ -168,7 +168,7 @@ export function ScopeTargetsPage() {
         )}
 
         {targets.length > 0 && (
-          <div className="divide-y divide-base-border md:hidden">
+          <div className="divide-y divide-surface-border md:hidden">
             {targets.map((target) => (
               <div key={target.id} className="space-y-3 p-4">
                 <div className="flex items-center justify-between gap-3">
