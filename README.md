@@ -16,6 +16,7 @@
   <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" />
   <img alt="Docker" src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" />
   <img alt="MCP" src="https://img.shields.io/badge/MCP-server-000000" />
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
 </p>
 
 ---
@@ -508,6 +509,7 @@ vexora/
 │   ├── assetfinder/  ct/  domainaudit/  findomain/  jsrecon/  nuclei/
 │   ├── openredirect/ sqlmap/ sublist3r/  takeover/  waybackurls/
 ├── .env.example
+├── LICENSE                      # MIT
 ├── docker-compose.yml           # db, api, worker, client, mcp-server, nginx
 ├── build.ps1 / build.sh         # build tool images + services (sequential)
 ├── build-tools.ps1 / .sh        # build only the recon tool images
@@ -612,6 +614,6 @@ Contributions, issues and feature requests are welcome — open an issue or a pu
 
 ## License
 
-No license has been published yet. Until one is added, all rights are reserved by the
-author. If you intend to reuse or redistribute Vexora, please open an issue or get in
-touch.
+Released under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Spondon Saha.
