@@ -1,0 +1,27 @@
+# env
+.env
+*.local
+
+# node
+node_modules/
+dist/
+npm-debug.log*
+
+# go
+/api/bin/
+*.exe
+*.test
+*.out
+
+# data / runtime
+/data/
+/wordlists/
+/custom-templates/
+/uploads/
+*.log
+
+# editor / os
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,135 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-recon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-recon}
+      POSTGRES_DB: ${POSTGRES_DB:-recon}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-recon} -d ${POSTGRES_DB:-recon}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [recon]
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      API_PORT: "8080"
+      API_ENV: ${API_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL:-postgres://recon:recon@db:5432/recon?sslmode=disable}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
+      DEFAULT_RATE_LIMIT_RPS: ${DEFAULT_RATE_LIMIT_RPS:-10}
+      DEFAULT_TOOL_TIMEOUT_SECONDS: ${DEFAULT_TOOL_TIMEOUT_SECONDS:-300}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - rawdata:/var/lib/recon/raw
+    networks: [recon]
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on: [api]
+    networks: [recon]
+
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    entrypoint: ["/app/worker"]
+    restart: unless-stopped
+    user: root
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgres://recon:recon@db:5432/recon?sslmode=disable}
+      RAW_OUTPUT_DIR: /var/lib/recon/raw
+      WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-3}
+      DEFAULT_TOOL_TIMEOUT_SECONDS: ${DEFAULT_TOOL_TIMEOUT_SECONDS:-300}
+      WORKFLOW_MAX_CONCURRENCY: ${WORKFLOW_MAX_CONCURRENCY:-3}
+      SUBFINDER_IMAGE: ${SUBFINDER_IMAGE:-projectdiscovery/subfinder:latest}
+      AMASS_IMAGE: ${AMASS_IMAGE:-caffix/amass:latest}
+      GAU_IMAGE: ${GAU_IMAGE:-sxcurity/gau:latest}
+      HTTPX_IMAGE: ${HTTPX_IMAGE:-projectdiscovery/httpx:latest}
+      ASSETFINDER_IMAGE: ${ASSETFINDER_IMAGE:-recon/assetfinder:latest}
+      SUBLIST3R_IMAGE: ${SUBLIST3R_IMAGE:-recon/sublist3r:latest}
+      FINDOMAIN_IMAGE: ${FINDOMAIN_IMAGE:-recon/findomain:latest}
+      CT_IMAGE: ${CT_IMAGE:-recon/ct:latest}
+      WAYBACKURLS_IMAGE: ${WAYBACKURLS_IMAGE:-recon/waybackurls:latest}
+      KATANA_IMAGE: ${KATANA_IMAGE:-projectdiscovery/katana:latest}
+      DOMAIN_AUDIT_IMAGE: ${DOMAIN_AUDIT_IMAGE:-recon/domainaudit:latest}
+      TAKEOVER_IMAGE: ${TAKEOVER_IMAGE:-recon/takeover:latest}
+      TAKEOVER_ENABLED: ${TAKEOVER_ENABLED:-true}
+      NUCLEI_IMAGE: ${NUCLEI_IMAGE:-recon/nuclei:latest}
+      NUCLEI_ENABLED: ${NUCLEI_ENABLED:-true}
+      DNSX_IMAGE: ${DNSX_IMAGE:-projectdiscovery/dnsx:latest}
+      NAABU_IMAGE: ${NAABU_IMAGE:-projectdiscovery/naabu:latest}
+      NMAP_IMAGE: ${NMAP_IMAGE:-instrumentisto/nmap:latest}
+      NETWORK_SCAN_ENABLED: ${NETWORK_SCAN_ENABLED:-true}
+      NETWORK_MAX_HOSTS: ${NETWORK_MAX_HOSTS:-5000}
+      SQLMAP_IMAGE: ${SQLMAP_IMAGE:-recon/sqlmap:latest}
+      SQLI_ENABLED: ${SQLI_ENABLED:-true}
+      SQLI_MAX_TARGETS: ${SQLI_MAX_TARGETS:-10}
+      JSRECON_IMAGE: ${JSRECON_IMAGE:-recon/jsrecon:latest}
+      JSRECON_ENABLED: ${JSRECON_ENABLED:-true}
+      JSRECON_MAX_FILES: ${JSRECON_MAX_FILES:-100}
+      OPENREDIRECT_IMAGE: ${OPENREDIRECT_IMAGE:-recon/openredirect:latest}
+      OPENREDIRECT_ENABLED: ${OPENREDIRECT_ENABLED:-true}
+      OPENREDIRECT_MAX_TARGETS: ${OPENREDIRECT_MAX_TARGETS:-50}
+      OPENREDIRECT_CANARY: ${OPENREDIRECT_CANARY:-evil.com}
+      AMASS_ENABLED: ${AMASS_ENABLED:-true}
+      AMASS_ACTIVE: ${AMASS_ACTIVE:-true}
+      SUBFINDER_ENABLED: ${SUBFINDER_ENABLED:-true}
+      ASSETFINDER_ENABLED: ${ASSETFINDER_ENABLED:-true}
+      SUBLIST3R_ENABLED: ${SUBLIST3R_ENABLED:-true}
+      FINDOMAIN_ENABLED: ${FINDOMAIN_ENABLED:-true}
+      CT_ENABLED: ${CT_ENABLED:-true}
+      GAU_ENABLED: ${GAU_ENABLED:-true}
+      WAYBACKURLS_ENABLED: ${WAYBACKURLS_ENABLED:-true}
+      KATANA_ENABLED: ${KATANA_ENABLED:-true}
+      DOCKER_HOST: unix:///var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - rawdata:/var/lib/recon/raw
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [recon]
+
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      MCP_PORT: "3001"
+      API_BASE_URL: http://api:8080
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN:-}
+    depends_on: [api]
+    networks: [recon]
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on: [api, client, mcp-server]
+    networks: [recon]
+
+volumes:
+  pgdata:
+  rawdata:
+
+networks:
+  recon:
+    driver: bridge
