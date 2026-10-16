@@ -289,7 +289,23 @@ def scan(host):
         body, code = http_body(chain[-1] if chain else host)
         result["http_status"] = code
 
-    # Known service fingerprints found in the response body.
+    # A subdomain takeover can only exist when the endpoint no longer serves
+    # real content. A live response (2xx), a redirect (3xx) or an
+    # access-controlled response (401/403) means the host is claimed and there
+    # is nothing to hijack — mark it claimed/safe and skip the fingerprint
+    # match. Only 404 ("not found"), or no HTTP response at all (where the
+    # dangling-record DNS checks below still apply), is a candidate.
+    if code is not None and code != 404:
+        if service:
+            result["status"] = "edge"
+            result["service"] = service["service"]
+            result["detail"] = f"points at {service['service']} but returned HTTP {code} (claimed)"
+        else:
+            result["status"] = "safe"
+            result["detail"] = f"HTTP {code}; not a takeover candidate"
+        return result
+
+    # Known service fingerprints found in the (404 / not-found) response body.
     if service and body_matches(service, body):
         result["status"] = "vulnerable"
         result["service"] = service["service"]
