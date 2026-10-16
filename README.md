@@ -103,9 +103,16 @@ prioritized, auditable workflow*.
     live-server probe → URL discovery (4 steps).
   - **Domain audit workflow** — DNS/DNSSEC, email security (SPF/DKIM/DMARC), HTTP
     security headers/CSP, and TLS configuration (4 steps).
-- **Ad-hoc tool scans** — run any of 16 tools directly against an active scope target.
+- **Ad-hoc tool scans** — run any of 22 scans directly against an active scope target.
 - **Live-server discovery & screenshots** — httpx probes plus fully-rendered PNG
   screenshots viewable inline in the UI.
+- **Technology fingerprinting** — httpx (`-tech-detect`), **WhatWeb**, **CMSeeK**, and
+  **WPScan** (auto-chained when WordPress is detected) report into a single,
+  deduplicated, per-detector view grouped by category.
+- **WHOIS / registration intel** — RDAP-backed registrar, registrant org, created /
+  updated / expiry dates, nameservers and status flags, with domain-expiry risk flagging.
+- **SSRF detection** — parameter probing plus out-of-band (OOB) interaction testing via a
+  self-hosted Interactsh client, with DNS/HTTP interaction correlation.
 - **Subdomain takeover detection**, **Nuclei vulnerability scanning**, **network recon**
   (resolve → port scan → service fingerprint), **SQL injection testing**, **JavaScript
   secrets/endpoint extraction**, and **open-redirect testing**.
@@ -146,6 +153,8 @@ prioritized, auditable workflow*.
 - **api** is the single source of truth; both the React UI and the MCP server call it.
 - **worker** claims queued scan jobs from Postgres, then launches one short-lived
   container per tool (via the host Docker socket) and parses the output back into the DB.
+- **oob** is a long-running out-of-band interaction server (a framework-native Interactsh
+  client) used by the SSRF module to confirm blind callbacks.
 - **Postgres** stores all structured data; raw tool output and screenshots live in a
   shared Docker volume.
 
@@ -191,7 +200,7 @@ API startup (`api/migrations/*.sql`, tracked in a `schema_migrations` table).
 | --- | --- | --- |
 | PostgreSQL | `postgres:16-alpine` | Primary datastore |
 | nginx | `nginx:1.27-alpine` | Reverse proxy (port 80) |
-| Docker Compose | v2 | Orchestration (6 services + tool images) |
+| Docker Compose | v2 | Orchestration (7 services + tool images) |
 
 ---
 
@@ -340,14 +349,17 @@ All settings are environment variables (see `.env.example`). Key ones:
 `SUBFINDER_ENABLED`, `ASSETFINDER_ENABLED`, `SUBLIST3R_ENABLED`, `FINDOMAIN_ENABLED`,
 `CT_ENABLED`, `GAU_ENABLED`, `WAYBACKURLS_ENABLED`, `KATANA_ENABLED`, `TAKEOVER_ENABLED`,
 `NUCLEI_ENABLED`, `NETWORK_SCAN_ENABLED`, `SQLI_ENABLED`, `JSRECON_ENABLED`,
-`OPENREDIRECT_ENABLED`, `AMASS_ENABLED` (all default `true`).
+`OPENREDIRECT_ENABLED`, `SSRF_ENABLED`, `TECHNOLOGY_ENABLED`, `WHATWEB_ENABLED`,
+`WPSCAN_ENABLED`, `CMSEEK_ENABLED`, `WHOIS_ENABLED`, `AMASS_ENABLED` (all default `true`).
 
 ### Tool image overrides
 
 `SUBFINDER_IMAGE`, `AMASS_IMAGE`, `GAU_IMAGE`, `HTTPX_IMAGE`, `ASSETFINDER_IMAGE`,
 `SUBLIST3R_IMAGE`, `FINDOMAIN_IMAGE`, `CT_IMAGE`, `WAYBACKURLS_IMAGE`, `KATANA_IMAGE`,
 `DOMAIN_AUDIT_IMAGE`, `TAKEOVER_IMAGE`, `NUCLEI_IMAGE`, `SQLMAP_IMAGE`, `JSRECON_IMAGE`,
-`OPENREDIRECT_IMAGE`, `DNSX_IMAGE`, `NAABU_IMAGE`, `NMAP_IMAGE`.
+`OPENREDIRECT_IMAGE`, `WHATWEB_IMAGE`, `WPSCAN_IMAGE`, `CMSEEK_IMAGE`, `SSRFMAP_IMAGE`,
+`GOPHERUS_IMAGE`, `RECOLLAPSE_IMAGE`, `SSTIMAP_IMAGE`, `DNSX_IMAGE`, `NAABU_IMAGE`,
+`NMAP_IMAGE`.
 
 ### Scan caps
 
@@ -358,7 +370,27 @@ All settings are environment variables (see `.env.example`). Key ones:
 | `JSRECON_MAX_FILES` | `100` | Max JS files fetched per run |
 | `OPENREDIRECT_MAX_TARGETS` | `50` | Max URLs tested per open-redirect run |
 | `OPENREDIRECT_CANARY` | `evil.com` | Canary host for redirect checks |
+| `TECH_MAX_TARGETS` | `500` | Max live servers fingerprinted per technology run |
+| `SSRF_MAX_TARGETS` | `25` | Max URLs tested per SSRF run |
 | `AMASS_ACTIVE` | `true` | Whether Amass runs in active mode |
+
+### SSRF & OOB interactions
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `SSRF_POLL_SECONDS` | `20` | OOB poll window per batch |
+| `SSRF_REQUEST_TIMEOUT_SECONDS` | `10` | Per-request timeout when probing targets |
+| `SSRF_CONCURRENCY` | `6` | Parallel probe workers |
+| `OOB_SERVICE_URL` | `http://oob:8090` | Internal URL of the OOB service (worker → oob) |
+| `OOB_SERVERS` | `oast.pro,oast.live,…` | Upstream Interactsh servers used by the OOB service |
+| `OOB_TOKEN` | *(empty)* | Optional Interactsh auth token |
+
+### WHOIS / RDAP
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `WHOIS_RDAP_BASE` | `https://rdap.org` | RDAP base URL (falls back to scraped WHOIS if needed) |
+| `WHOIS_TIMEOUT_SECONDS` | `20` | Per-domain lookup timeout |
 
 ### MCP server
 
@@ -386,6 +418,9 @@ images are built locally from `tools/`.
 | **waybackurls** | `recon/waybackurls:latest` | Fetch Wayback Machine URLs |
 | **Katana** | `projectdiscovery/katana:latest` | Web crawling (JS-aware) |
 | **httpx** | `projectdiscovery/httpx:latest` | HTTP probing, tech detection & screenshots |
+| **WhatWeb** | `recon/whatweb:latest` | Signature-based web technology fingerprinting |
+| **CMSeeK** | `recon/cmseek:latest` | CMS detection + version enumeration |
+| **WPScan** | `recon/wpscan:latest` | WordPress core/theme/plugin enumeration |
 | **Domain audit** | `recon/domainaudit:latest` | DNS/DNSSEC, SPF/DKIM/DMARC, headers, TLS |
 | **Subdomain takeover** | `recon/takeover:latest` | Fingerprint dangling CNAMEs / takeovers |
 | **Nuclei** | `recon/nuclei:latest` | Template-based vulnerability scanning |
@@ -395,6 +430,10 @@ images are built locally from `tools/`.
 | **dnsx** | `projectdiscovery/dnsx:latest` | Fast DNS resolution / reverse DNS |
 | **naabu** | `projectdiscovery/naabu:latest` | Port scanning |
 | **nmap** | `instrumentisto/nmap:latest` | Service / version fingerprinting |
+
+> **WHOIS** uses public **RDAP** over HTTPS (`WHOIS_RDAP_BASE`, default
+> `https://rdap.org`) and needs no container. **SSRF** discovery is framework-native and
+> pairs with the **oob** service for out-of-band callbacks.
 
 ---
 
@@ -422,7 +461,20 @@ images are built locally from `tools/`.
 
 Run directly against an active scope target: `subfinder`, `amass`, `assetfinder`,
 `sublist3r`, `findomain`, `ct`, `gau`, `waybackurls`, `katana`, `takeover`, `nuclei`,
-`netscan` (dnsx + naabu + nmap), `sqli`, `jsrecon`, `openredirect`, and `screenshot`.
+`netscan` (dnsx + naabu + nmap), `sqli`, `jsrecon`, `openredirect`, `ssrf`,
+`techdetect` (httpx), `whatweb`, `wpscan`, `cmseek`, `whois`, and `screenshot`.
+
+### Technology & registration modules
+
+- **`techdetect`** — httpx `-tech-detect` first pass over every live server.
+- **`whatweb`** / **`cmseek`** — deeper signature and CMS enumeration across the live
+  servers (cookie/session and response-metadata noise is filtered out).
+- **`wpscan`** — auto-chains: it only runs against servers already shown to be WordPress
+  by a prior detector.
+- **`whois`** — RDAP lookup per domain (registrar, registrant, dates, nameservers,
+  statuses), flagging domains expiring within 90 days.
+- Every detector's hits are stored separately (tagged with `detected_by`) and presented
+  as one deduplicated union in the UI.
 
 ---
 
@@ -453,6 +505,9 @@ Base path: `/api/v1`.
 | `GET` | `/targets/{id}/sqli-findings` | SQLi findings |
 | `GET` | `/targets/{id}/js-findings` | JS findings |
 | `GET` | `/targets/{id}/open-redirect-findings` | Open-redirect findings |
+| `GET` | `/targets/{id}/ssrf-findings` | SSRF findings |
+| `GET` | `/targets/{id}/technologies` | Deduplicated technology detections (per detector) |
+| `GET` | `/targets/{id}/whois-records` | WHOIS / RDAP registration records |
 | `GET` | `/live-servers/{id}/screenshot` | Screenshot PNG for a live server |
 
 ---
@@ -483,22 +538,24 @@ vexora/
 ├── api/                         # Go backend (module: github.com/spondonsaha/vexora/api)
 │   ├── cmd/
 │   │   ├── api/                 # HTTP API entrypoint
-│   │   └── worker/              # job-queue worker entrypoint
+│   │   ├── worker/              # job-queue worker entrypoint
+│   │   └── oob/                 # out-of-band interaction service (SSRF)
 │   ├── internal/
 │   │   ├── api/                 # handlers, router, middleware
 │   │   ├── config/              # environment configuration
 │   │   ├── db/                  # pgx pool + migration runner
 │   │   ├── models/              # domain types
+│   │   ├── oob/                 # Interactsh client + correlation service
 │   │   ├── scanner/             # tool runners, parsers, workflows
 │   │   └── store/               # Postgres data access (PGStore)
-│   ├── migrations/              # embedded SQL migrations (0001–0012)
+│   ├── migrations/              # embedded SQL migrations (0001–0014)
 │   ├── Dockerfile
 │   ├── go.mod
 │   └── go.sum
 ├── client/                      # React + Vite SPA
 │   ├── public/                  # logo, favicons
 │   ├── src/
-│   │   ├── components/          # panels, tables, UI primitives
+│   │   ├── components/          # panels (SSRF, Technology, WHOIS, …), tables, primitives
 │   │   ├── lib/                 # API client, types
 │   │   ├── pages/               # onboarding, targets, detail, dashboard
 │   │   └── theme/               # dark/light theme
@@ -510,11 +567,12 @@ vexora/
 │   └── package.json
 ├── nginx/                       # reverse-proxy config
 ├── tools/                       # self-built tool images (Dockerfile each)
-│   ├── assetfinder/  ct/  domainaudit/  findomain/  jsrecon/  nuclei/
-│   ├── openredirect/ sqlmap/ sublist3r/  takeover/  waybackurls/
+│   ├── assetfinder/  cmseek/  ct/  domainaudit/  findomain/  jsrecon/
+│   ├── nuclei/  openredirect/  sqlmap/  sublist3r/  takeover/  waybackurls/
+│   └── whatweb/  wpscan/
 ├── .env.example
 ├── LICENSE                      # MIT
-├── docker-compose.yml           # db, api, worker, client, mcp-server, nginx
+├── docker-compose.yml           # db, api, worker, oob, client, mcp-server, nginx
 ├── build.ps1 / build.sh         # build tool images + services (sequential)
 ├── build-tools.ps1 / .sh        # build only the recon tool images
 ├── update.ps1 / update.sh       # pull, back up, rebuild, restart
@@ -585,13 +643,16 @@ Vexora is built so it can only be pointed at assets **you are authorized to test
 
 **Implemented**
 
-- Postgres schema + migrations (0001–0012)
+- Postgres schema + migrations (0001–0014)
 - Scope-target management with authorization gating
 - Wildcard workflow (enum, scrape, consolidate+probe, URLs)
 - Domain audit workflow (DNS, email, headers, TLS)
 - Live-server probing **with screenshots**
-- Ad-hoc scans for 16 tools
+- Ad-hoc scans for 22 tools
 - Subdomain takeover, Nuclei, network recon, SQLi, JS recon, open redirect
+- Technology fingerprinting (httpx, WhatWeb, CMSeeK, WPScan) with a deduplicated view
+- WHOIS / RDAP registration intel with expiry-risk flagging
+- SSRF discovery with out-of-band (Interactsh) interaction correlation
 - Attack-surface dashboard, ROI leaderboard, notes, raw-output viewer
 - MCP server (scope-target tools)
 - Dark & light themes, responsive layout

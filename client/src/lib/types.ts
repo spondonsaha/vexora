@@ -319,6 +319,86 @@ export interface OpenRedirectFindingList {
   count: number
 }
 
+export type SSRFFindingType = 'candidate' | 'ssrf_oob' | 'metadata_read'
+
+export interface SSRFFinding {
+  id: number
+  scope_target_id: string
+  scan_job_id: string | null
+  url: string
+  parameter: string
+  payload: string
+  method: string
+  finding_type: string
+  severity: string
+  confirmed: boolean
+  protocol: string
+  remote_address: string
+  evidence: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SSRFFindingList {
+  items: SSRFFinding[]
+  count: number
+}
+
+export type TechnologyCategory =
+  | 'cms'
+  | 'framework'
+  | 'server'
+  | 'js-library'
+  | 'analytics'
+  | 'cdn'
+  | 'waf'
+  | 'language'
+  | 'database'
+  | 'wordpress-theme'
+  | 'wordpress-plugin'
+  | 'other'
+
+export interface Technology {
+  id: number
+  scope_target_id: string
+  live_web_server_id: string
+  scan_job_id: string | null
+  name: string
+  version: string
+  category: string
+  detected_by: string
+  cve_refs: string[]
+  created_at: string
+  updated_at: string
+}
+
+export interface TechnologyList {
+  items: Technology[]
+  count: number
+}
+
+export interface WhoisRecord {
+  id: number
+  scope_target_id: string
+  root_domain_id: string | null
+  scan_job_id: string | null
+  domain: string
+  registrant_org: string
+  registrar: string
+  registered_at: string | null
+  expires_at: string | null
+  nameservers: string[]
+  statuses: string[]
+  source: string
+  created_at: string
+  updated_at: string
+}
+
+export interface WhoisRecordList {
+  items: WhoisRecord[]
+  count: number
+}
+
 export const scopeTargetTypeLabels: Record<ScopeTargetType, string> = {
   company: 'Company',
   wildcard: 'Wildcard',

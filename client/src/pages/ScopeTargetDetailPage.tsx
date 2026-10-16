@@ -15,9 +15,12 @@ import { NetworkPanel } from '../components/NetworkPanel'
 import { NotesPanel } from '../components/NotesPanel'
 import { NucleiPanel } from '../components/NucleiPanel'
 import { OpenRedirectPanel } from '../components/OpenRedirectPanel'
+import { SSRFPanel } from '../components/SSRFPanel'
 import { ScanPanel } from '../components/ScanPanel'
 import { SQLiPanel } from '../components/SQLiPanel'
 import { TakeoverPanel } from '../components/TakeoverPanel'
+import { TechnologyPanel } from '../components/TechnologyPanel'
+import { WhoisPanel } from '../components/WhoisPanel'
 import { WorkflowPanel } from '../components/WorkflowPanel'
 import { Workspace } from '../components/workspace/Workspace'
 import { ApiStatus } from '../components/workspace/ApiStatus'
@@ -229,6 +232,27 @@ const WILDCARD_PHASES: PhaseDef[] = [
     tools: ['openredirect'],
   },
   {
+    id: 'ssrf',
+    label: 'SSRF',
+    title: 'Server-Side Request Forgery',
+    help: 'Inject out-of-band payloads into URL-style parameters and confirm SSRF via DNS/HTTP callbacks. Cloud-metadata probes flag critical exposures.',
+    tools: ['ssrf'],
+  },
+  {
+    id: 'fingerprint',
+    label: 'Fingerprint',
+    title: 'Technology Fingerprinting',
+    help: 'Fingerprint the CMS, frameworks, servers, JS libraries, analytics, CDNs and WAFs running on every live server. Results are normalized and deduplicated across detectors.',
+    tools: ['httpx', 'whatweb', 'wappalyzer', 'cmseek', 'wpscan', 'retirejs'],
+  },
+  {
+    id: 'whois',
+    label: 'WHOIS',
+    title: 'WHOIS / Ownership',
+    help: 'Resolve registrant ownership, registrar, nameservers and the registration lifecycle for the root domain over RDAP, flagging domains at risk of expiration.',
+    tools: ['rdap', 'whois'],
+  },
+  {
     id: 'notes',
     label: 'Notes',
     title: 'Notes',
@@ -247,6 +271,13 @@ function buildPhases(type: ScopeTargetType): PhaseDef[] {
         title: 'Domain & DNS Security',
         help: 'Audit DNS & DNSSEC, email security (SPF/DKIM/DMARC), HTTP security headers, and TLS configuration for this URL.',
         tools: ['domainaudit'],
+      },
+      {
+        id: 'whois',
+        label: 'WHOIS',
+        title: 'WHOIS / Ownership',
+        help: 'Resolve registrant ownership, registrar, nameservers and the registration lifecycle for the root domain over RDAP.',
+        tools: ['rdap', 'whois'],
       },
       {
         id: 'planned',
@@ -427,6 +458,15 @@ export function ScopeTargetDetailPage() {
       case 'open-redirect':
         status[phase.id] = fromScans(['openredirect'])
         break
+      case 'ssrf':
+        status[phase.id] = fromScans(['ssrf'])
+        break
+      case 'fingerprint':
+        status[phase.id] = fromScans(['techdetect', 'whatweb', 'wpscan', 'cmseek'])
+        break
+      case 'whois':
+        status[phase.id] = fromScans(['whois'])
+        break
       default:
         status[phase.id] = 'todo'
     }
@@ -475,6 +515,12 @@ export function ScopeTargetDetailPage() {
         return (
           <OpenRedirectPanel scopeTargetId={target.id} authConfirmed={target.auth_confirmed} />
         )
+      case 'ssrf':
+        return <SSRFPanel scopeTargetId={target.id} authConfirmed={target.auth_confirmed} />
+      case 'fingerprint':
+        return <TechnologyPanel scopeTargetId={target.id} authConfirmed={target.auth_confirmed} />
+      case 'whois':
+        return <WhoisPanel scopeTargetId={target.id} authConfirmed={target.auth_confirmed} />
       case 'notes':
         return <NotesPanel scopeTargetId={target.id} initialNotes={target.notes} />
       case 'planned':

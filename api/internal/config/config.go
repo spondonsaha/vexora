@@ -33,6 +33,10 @@ type Config struct {
 	SQLMapImage            string
 	JSReconImage           string
 	OpenRedirectImage      string
+	SSRFMapImage           string
+	GopherusImage          string
+	RecollapseImage        string
+	SSTImapImage           string
 	DnsxImage              string
 	NaabuImage             string
 	NmapImage              string
@@ -43,6 +47,22 @@ type Config struct {
 	SQLiMaxTargets         int
 	JSReconMaxFiles        int
 	OpenRedirectMaxTargets int
+	SSRFMaxTargets         int
+	SSRFPollSeconds        int
+	SSRFRequestTimeout     int
+	SSRFConcurrency        int
+	OOBServiceURL          string
+	TechMaxTargets         int
+	WhoisRDAPBase          string
+	WhoisTimeout           int
+	TechnologyEnabled      bool
+	WhatWebImage           string
+	WPScanImage            string
+	CMSeeKImage            string
+	WhatWebEnabled         bool
+	WPScanEnabled          bool
+	CMSeeKEnabled          bool
+	WhoisEnabled           bool
 	AmassEnabled           bool
 	AmassActive            bool
 	SubfinderEnabled       bool
@@ -60,6 +80,7 @@ type Config struct {
 	JSReconEnabled         bool
 	OpenRedirectEnabled    bool
 	OpenRedirectCanary     string
+	SSRFEnabled            bool
 }
 
 func Load() Config {
@@ -89,6 +110,10 @@ func Load() Config {
 		SQLMapImage:            env("SQLMAP_IMAGE", "recon/sqlmap:latest"),
 		JSReconImage:           env("JSRECON_IMAGE", "recon/jsrecon:latest"),
 		OpenRedirectImage:      env("OPENREDIRECT_IMAGE", "recon/openredirect:latest"),
+		SSRFMapImage:           env("SSRFMAP_IMAGE", "recon/ssrfmap:latest"),
+		GopherusImage:          env("GOPHERUS_IMAGE", "recon/gopherus:latest"),
+		RecollapseImage:        env("RECOLLAPSE_IMAGE", "recon/recollapse:latest"),
+		SSTImapImage:           env("SSTIMAP_IMAGE", "recon/sstimap:latest"),
 		DnsxImage:              env("DNSX_IMAGE", "projectdiscovery/dnsx:latest"),
 		NaabuImage:             env("NAABU_IMAGE", "projectdiscovery/naabu:latest"),
 		NmapImage:              env("NMAP_IMAGE", "instrumentisto/nmap:latest"),
@@ -99,6 +124,22 @@ func Load() Config {
 		SQLiMaxTargets:         envInt("SQLI_MAX_TARGETS", 10),
 		JSReconMaxFiles:        envInt("JSRECON_MAX_FILES", 100),
 		OpenRedirectMaxTargets: envInt("OPENREDIRECT_MAX_TARGETS", 50),
+		SSRFMaxTargets:         envInt("SSRF_MAX_TARGETS", 25),
+		SSRFPollSeconds:        envInt("SSRF_POLL_SECONDS", 20),
+		SSRFRequestTimeout:     envInt("SSRF_REQUEST_TIMEOUT_SECONDS", 10),
+		SSRFConcurrency:        envInt("SSRF_CONCURRENCY", 6),
+		OOBServiceURL:          env("OOB_SERVICE_URL", "http://oob:8090"),
+		TechMaxTargets:         envInt("TECH_MAX_TARGETS", 500),
+		WhoisRDAPBase:          env("WHOIS_RDAP_BASE", "https://rdap.org"),
+		WhoisTimeout:           envInt("WHOIS_TIMEOUT_SECONDS", 20),
+		TechnologyEnabled:      envBool("TECHNOLOGY_ENABLED", true),
+		WhatWebImage:           env("WHATWEB_IMAGE", "recon/whatweb:latest"),
+		WPScanImage:            env("WPSCAN_IMAGE", "recon/wpscan:latest"),
+		CMSeeKImage:            env("CMSEEK_IMAGE", "recon/cmseek:latest"),
+		WhatWebEnabled:         envBool("WHATWEB_ENABLED", true),
+		WPScanEnabled:          envBool("WPSCAN_ENABLED", true),
+		CMSeeKEnabled:          envBool("CMSEEK_ENABLED", true),
+		WhoisEnabled:           envBool("WHOIS_ENABLED", true),
 		AmassEnabled:           envBool("AMASS_ENABLED", true),
 		AmassActive:            envBool("AMASS_ACTIVE", true),
 		SubfinderEnabled:       envBool("SUBFINDER_ENABLED", true),
@@ -116,6 +157,7 @@ func Load() Config {
 		JSReconEnabled:         envBool("JSRECON_ENABLED", true),
 		OpenRedirectEnabled:    envBool("OPENREDIRECT_ENABLED", true),
 		OpenRedirectCanary:     env("OPENREDIRECT_CANARY", "evil.com"),
+		SSRFEnabled:            envBool("SSRF_ENABLED", true),
 	}
 }
 

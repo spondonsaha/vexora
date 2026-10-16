@@ -66,6 +66,9 @@ func NewRouter(st store.Store, cfg config.Config) http.Handler {
 		r.Get("/targets/{id}/sqli-findings", h.ListTargetSQLiFindings)
 		r.Get("/targets/{id}/js-findings", h.ListTargetJSFindings)
 		r.Get("/targets/{id}/open-redirect-findings", h.ListTargetOpenRedirectFindings)
+		r.Get("/targets/{id}/ssrf-findings", h.ListTargetSSRFFindings)
+		r.Get("/targets/{id}/technologies", h.ListTargetTechnologies)
+		r.Get("/targets/{id}/whois-records", h.ListTargetWhoisRecords)
 		r.Get("/live-servers/{id}/screenshot", h.GetLiveWebServerScreenshot)
 	})
 

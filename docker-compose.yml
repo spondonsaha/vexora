@@ -85,6 +85,27 @@ services:
       OPENREDIRECT_ENABLED: ${OPENREDIRECT_ENABLED:-true}
       OPENREDIRECT_MAX_TARGETS: ${OPENREDIRECT_MAX_TARGETS:-50}
       OPENREDIRECT_CANARY: ${OPENREDIRECT_CANARY:-evil.com}
+      SSRF_ENABLED: ${SSRF_ENABLED:-true}
+      SSRF_MAX_TARGETS: ${SSRF_MAX_TARGETS:-25}
+      SSRF_POLL_SECONDS: ${SSRF_POLL_SECONDS:-20}
+      SSRF_REQUEST_TIMEOUT_SECONDS: ${SSRF_REQUEST_TIMEOUT_SECONDS:-10}
+      SSRF_CONCURRENCY: ${SSRF_CONCURRENCY:-6}
+      OOB_SERVICE_URL: ${OOB_SERVICE_URL:-http://oob:8090}
+      SSRFMAP_IMAGE: ${SSRFMAP_IMAGE:-recon/ssrfmap:latest}
+      GOPHERUS_IMAGE: ${GOPHERUS_IMAGE:-recon/gopherus:latest}
+      RECOLLAPSE_IMAGE: ${RECOLLAPSE_IMAGE:-recon/recollapse:latest}
+      SSTIMAP_IMAGE: ${SSTIMAP_IMAGE:-recon/sstimap:latest}
+      TECHNOLOGY_ENABLED: ${TECHNOLOGY_ENABLED:-true}
+      TECH_MAX_TARGETS: ${TECH_MAX_TARGETS:-500}
+      WHATWEB_IMAGE: ${WHATWEB_IMAGE:-recon/whatweb:latest}
+      WPSCAN_IMAGE: ${WPSCAN_IMAGE:-recon/wpscan:latest}
+      CMSEEK_IMAGE: ${CMSEEK_IMAGE:-recon/cmseek:latest}
+      WHATWEB_ENABLED: ${WHATWEB_ENABLED:-true}
+      WPSCAN_ENABLED: ${WPSCAN_ENABLED:-true}
+      CMSEEK_ENABLED: ${CMSEEK_ENABLED:-true}
+      WHOIS_ENABLED: ${WHOIS_ENABLED:-true}
+      WHOIS_RDAP_BASE: ${WHOIS_RDAP_BASE:-https://rdap.org}
+      WHOIS_TIMEOUT_SECONDS: ${WHOIS_TIMEOUT_SECONDS:-20}
       AMASS_ENABLED: ${AMASS_ENABLED:-true}
       AMASS_ACTIVE: ${AMASS_ACTIVE:-true}
       SUBFINDER_ENABLED: ${SUBFINDER_ENABLED:-true}
@@ -102,6 +123,19 @@ services:
     volumes:
       - rawdata:/var/lib/recon/raw
       - /var/run/docker.sock:/var/run/docker.sock
+    networks: [recon]
+
+  oob:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    entrypoint: ["/app/oob"]
+    restart: unless-stopped
+    environment:
+      OOB_PORT: "8090"
+      OOB_SERVERS: ${OOB_SERVERS:-oast.pro,oast.live,oast.site,oast.online,oast.fun,oast.me}
+      OOB_TOKEN: ${OOB_TOKEN:-}
+      OOB_POLL_SECONDS: ${OOB_POLL_SECONDS:-2}
     networks: [recon]
 
   mcp-server:

@@ -104,5 +104,14 @@ type Store interface {
 	UpsertOpenRedirectFindings(ctx context.Context, scopeTargetID, scanJobID uuid.UUID, rows []OpenRedirectFindingRow) (int, error)
 	ListOpenRedirectFindingsByScopeTarget(ctx context.Context, scopeTargetID uuid.UUID) ([]models.OpenRedirectFinding, error)
 
+	UpsertSSRFFindings(ctx context.Context, scopeTargetID, scanJobID uuid.UUID, rows []SSRFFindingRow) (int, error)
+	ListSSRFFindingsByScopeTarget(ctx context.Context, scopeTargetID uuid.UUID) ([]models.SSRFFinding, error)
+
+	UpsertTechnologies(ctx context.Context, scopeTargetID, scanJobID uuid.UUID, rows []TechnologyRow) (int, error)
+	ListTechnologiesByScopeTarget(ctx context.Context, scopeTargetID uuid.UUID) ([]models.Technology, error)
+
+	UpsertWhoisRecords(ctx context.Context, scopeTargetID, scanJobID uuid.UUID, rows []WhoisRecordRow) (int, error)
+	ListWhoisRecordsByScopeTarget(ctx context.Context, scopeTargetID uuid.UUID) ([]models.WhoisRecord, error)
+
 	RecordAudit(ctx context.Context, e AuditEntry) error
 }

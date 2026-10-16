@@ -73,6 +73,30 @@ func (r *Runner) Execute(ctx context.Context, job *models.ScanJob) Result {
 		return r.runOpenRedirectAdHoc(ctx, job, target, root)
 	}
 
+	if job.Tool == SSRFTool {
+		return r.runSSRFAdHoc(ctx, job, target, root)
+	}
+
+	if job.Tool == TechnologyTool {
+		return r.runTechnologyAdHoc(ctx, job, target, root)
+	}
+
+	if job.Tool == WhatWebTool {
+		return r.runWhatWebAdHoc(ctx, job, target, root)
+	}
+
+	if job.Tool == WPScanTool {
+		return r.runWPScanAdHoc(ctx, job, target, root)
+	}
+
+	if job.Tool == CMSeeKTool {
+		return r.runCMSeeKAdHoc(ctx, job, target, root)
+	}
+
+	if job.Tool == WhoisTool {
+		return r.runWhoisAdHoc(ctx, job, target, root)
+	}
+
 	src, ok := r.sourceByName(job.Tool, root)
 	if !ok {
 		return Result{Status: models.ScanFailed, ExitCode: -1, Err: fmt.Errorf("unsupported tool %q", job.Tool)}

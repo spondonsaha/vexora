@@ -13,7 +13,10 @@ import type {
   ScopeTargetList,
   ScopeTargetType,
   SQLiFindingList,
+  SSRFFindingList,
   SubdomainList,
+  TechnologyList,
+  WhoisRecordList,
   Workflow,
   WorkflowList,
 } from './types'
@@ -147,6 +150,15 @@ export const api = {
 
   listOpenRedirectFindings: (scopeTargetId: string) =>
     request<OpenRedirectFindingList>(`/targets/${scopeTargetId}/open-redirect-findings`),
+
+  listSSRFFindings: (scopeTargetId: string) =>
+    request<SSRFFindingList>(`/targets/${scopeTargetId}/ssrf-findings`),
+
+  listTechnologies: (scopeTargetId: string) =>
+    request<TechnologyList>(`/targets/${scopeTargetId}/technologies`),
+
+  listWhoisRecords: (scopeTargetId: string) =>
+    request<WhoisRecordList>(`/targets/${scopeTargetId}/whois-records`),
 
   runWildcardWorkflow: (scopeTargetId: string) =>
     request<Workflow>('/workflows/wildcard/run', {

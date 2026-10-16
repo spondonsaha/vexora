@@ -30,6 +30,12 @@ var supportedTools = map[string]bool{
 	"sqli":         true,
 	"jsrecon":      true,
 	"openredirect": true,
+	"ssrf":         true,
+	"techdetect":   true,
+	"whatweb":      true,
+	"wpscan":       true,
+	"cmseek":       true,
+	"whois":        true,
 	"screenshot":   true,
 }
 
@@ -41,7 +47,7 @@ type createScanRequest struct {
 func (h *Handler) CreateScan(w http.ResponseWriter, r *http.Request) {
 	tool := strings.ToLower(strings.TrimSpace(chi.URLParam(r, "id")))
 	if !supportedTools[tool] {
-		writeError(w, http.StatusUnprocessableEntity, "unsupported_tool", "supported tools: subfinder, amass, assetfinder, sublist3r, findomain, ct, gau, waybackurls, katana, takeover, nuclei, netscan, sqli, jsrecon, openredirect, screenshot")
+		writeError(w, http.StatusUnprocessableEntity, "unsupported_tool", "supported tools: subfinder, amass, assetfinder, sublist3r, findomain, ct, gau, waybackurls, katana, takeover, nuclei, netscan, sqli, jsrecon, openredirect, ssrf, techdetect, whatweb, wpscan, cmseek, whois, screenshot")
 		return
 	}
 
@@ -165,6 +171,39 @@ func (h *Handler) CreateScan(w http.ResponseWriter, r *http.Request) {
 		}
 		req.Options["max_targets"] = maxTargets
 		req.Options["test_all_params"] = testAll
+	}
+
+	if tool == scanner.SSRFTool {
+		maxTargets := optInt(req.Options, "max_targets", h.cfg.SSRFMaxTargets)
+		if maxTargets < 1 || maxTargets > 500 {
+			writeError(w, http.StatusUnprocessableEntity, "invalid_max_targets", "max_targets must be between 1 and 500")
+			return
+		}
+		testAll := false
+		if req.Options != nil {
+			if raw, ok := req.Options["test_all_params"]; ok {
+				if b, ok := raw.(bool); ok {
+					testAll = b
+				}
+			}
+		}
+		if req.Options == nil {
+			req.Options = map[string]any{}
+		}
+		req.Options["max_targets"] = maxTargets
+		req.Options["test_all_params"] = testAll
+	}
+
+	if tool == scanner.TechnologyTool || tool == scanner.WhatWebTool || tool == scanner.WPScanTool || tool == scanner.CMSeeKTool {
+		maxTargets := optInt(req.Options, "max_targets", h.cfg.TechMaxTargets)
+		if maxTargets < 1 || maxTargets > 2000 {
+			writeError(w, http.StatusUnprocessableEntity, "invalid_max_targets", "max_targets must be between 1 and 2000")
+			return
+		}
+		if req.Options == nil {
+			req.Options = map[string]any{}
+		}
+		req.Options["max_targets"] = maxTargets
 	}
 
 	scopeTargetID, err := uuid.Parse(strings.TrimSpace(req.ScopeTargetID))
@@ -382,6 +421,51 @@ func (h *Handler) ListTargetOpenRedirectFindings(w http.ResponseWriter, r *http.
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": findings, "count": len(findings)})
+}
+
+func (h *Handler) ListTargetSSRFFindings(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_id", "scope target id must be a valid UUID")
+		return
+	}
+
+	findings, err := h.store.ListSSRFFindingsByScopeTarget(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal_error", "failed to list ssrf findings")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": findings, "count": len(findings)})
+}
+
+func (h *Handler) ListTargetTechnologies(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_id", "scope target id must be a valid UUID")
+		return
+	}
+
+	items, err := h.store.ListTechnologiesByScopeTarget(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal_error", "failed to list technologies")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items, "count": len(items)})
+}
+
+func (h *Handler) ListTargetWhoisRecords(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_id", "scope target id must be a valid UUID")
+		return
+	}
+
+	items, err := h.store.ListWhoisRecordsByScopeTarget(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal_error", "failed to list whois records")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"items": items, "count": len(items)})
 }
 
 // optInt reads an integer option from a decoded JSON object, tolerating the
